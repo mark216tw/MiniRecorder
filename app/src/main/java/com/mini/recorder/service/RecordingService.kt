@@ -77,6 +77,7 @@ class RecordingService : Service() {
             ACTION_RESUME -> resumeRecording()
             ACTION_MARK -> addMarker()
             ACTION_STOP -> stopRecording()
+            ACTION_DISCARD -> discardRecording()
         }
         return START_NOT_STICKY
     }
@@ -318,6 +319,32 @@ class RecordingService : Service() {
         }
     }
 
+    private fun discardRecording() {
+        if (finalized) {
+            stopSelf()
+            return
+        }
+        val id = recordingId
+        engine?.stop()
+        engine = null
+        finalized = true
+        releaseWakeLock()
+        timerJob?.cancel()
+        timerJob = null
+
+        scope?.launch {
+            withContext(NonCancellable) {
+                if (id > 0) {
+                    repository.getById(id)?.let { repository.delete(it) }
+                }
+                stateHolder.reset()
+                RecordingNotifications.cancel(this@RecordingService)
+            }
+            ServiceCompat.stopForeground(this@RecordingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
+    }
+
     private suspend fun persistResult(id: Long, duration: Long, channel: Int) {
         if (id > 0) {
             val existing = repository.getById(id)
@@ -399,6 +426,7 @@ class RecordingService : Service() {
         const val ACTION_START = "com.mini.recorder.action.START"
         const val ACTION_TOGGLE = "com.mini.recorder.action.TOGGLE"
         const val ACTION_STOP = "com.mini.recorder.action.STOP"
+        const val ACTION_DISCARD = "com.mini.recorder.action.DISCARD"
         const val ACTION_PAUSE = "com.mini.recorder.action.PAUSE"
         const val ACTION_RESUME = "com.mini.recorder.action.RESUME"
         const val ACTION_MARK = "com.mini.recorder.action.MARK"

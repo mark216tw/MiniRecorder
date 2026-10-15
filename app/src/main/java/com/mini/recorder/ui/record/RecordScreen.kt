@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Mic
@@ -96,6 +97,7 @@ fun RecordScreen(viewModel: RecordViewModel = hiltViewModel()) {
     }
     var titleDraft by remember { mutableStateOf("") }
     var showTitleDialog by remember { mutableStateOf(false) }
+    var showDiscardDialog by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -388,7 +390,44 @@ fun RecordScreen(viewModel: RecordViewModel = hiltViewModel()) {
                         Spacer(Modifier.height(4.dp))
                         Text("停止", style = MaterialTheme.typography.labelSmall)
                     }
+
+                    // 捨棄
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        FilledTonalIconButton(
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showDiscardDialog = true
+                            },
+                            modifier = Modifier.size(56.dp),
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(Icons.Filled.Delete, contentDescription = "捨棄", modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        Text("捨棄", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
+            }
+
+            if (showDiscardDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDiscardDialog = false },
+                    title = { Text("捨棄這段錄音？") },
+                    text = { Text("將停止錄音並永久刪除，無法復原。") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showDiscardDialog = false
+                            context.startService(
+                                RecordingService.actionIntent(context, RecordingService.ACTION_DISCARD)
+                            )
+                        }) { Text("捨棄", color = MaterialTheme.colorScheme.error) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDiscardDialog = false }) { Text("取消") }
+                    }
+                )
             }
 
             Spacer(Modifier.height(18.dp))
