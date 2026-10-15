@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">mini錄音機</string>
+    <string name="tile_label">快速錄音</string>
+    <string name="widget_label">錄音小工具</string>
+</resources>

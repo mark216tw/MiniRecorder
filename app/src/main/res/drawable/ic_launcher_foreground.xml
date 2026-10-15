@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Friendly decorative marks, kept inside the 72dp crop area. -->
+    <path
+        android:fillColor="#FF6F83"
+        android:pathData="M25,27l1.5,3.5L30,32l-3.5,1.5L25,37l-1.5,-3.5L20,32l3.5,-1.5z" />
+    <path
+        android:fillColor="#8B1E3F"
+        android:pathData="M82,32a3,3 0,1 0,0 6a3,3 0,1 0,0 -6" />
+    <path
+        android:fillColor="#FF8FA3"
+        android:pathData="M85,43a1.8,1.8 0,1 0,0 3.6a1.8,1.8 0,1 0,0 -3.6" />
+
+    <!--
+        The microphone group is 90% of its designed bounds: its longest side is
+        about 55.8dp, or 84.5% of the centered 66dp safe area.
+    -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.9"
+        android:scaleY="0.9">
+
+    <!-- Microphone body. -->
+    <path
+        android:fillColor="#FFFDF8"
+        android:pathData="M54,27C46.3,27 40,32.8 40,40v10c0,7.7 6.3,13 14,13s14,-5.3 14,-13V40c0,-7.2 -6.3,-13 -14,-13z" />
+    <path
+        android:fillColor="#FF8A94"
+        android:pathData="M54,29c-6.6,0 -12,4.9 -12,11v7h24v-7c0,-6.1 -5.4,-11 -12,-11z" />
+    <path
+        android:fillColor="#FFDAD2"
+        android:pathData="M42,47h24v3c0,6.5 -5.4,11 -12,11s-12,-4.5 -12,-11z" />
+
+    <!-- Grille dots: alternating colors keep the reference's dotted texture. -->
+    <path
+        android:fillColor="#5A1A2A"
+        android:pathData="M42.35,34a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M52.85,34a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M63.35,34a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M47.6,39a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M58.1,39a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M42.35,44a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M52.85,44a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M63.35,44a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0" />
+    <path
+        android:fillColor="#FF6F83"
+        android:pathData="M47.6,34a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M58.1,34a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M42.35,39a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M52.85,39a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M63.35,39a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M47.6,44a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0M58.1,44a1.15,1.15 0,1 0,2.3,0a1.15,1.15 0,1 0,-2.3,0" />
+
+    <!-- Thick burgundy cartoon outline. -->
+    <path
+        android:fillColor="#00FFFFFF"
+        android:pathData="M54,27C46.3,27 40,32.8 40,40v10c0,7.7 6.3,13 14,13s14,-5.3 14,-13V40c0,-7.2 -6.3,-13 -14,-13z"
+        android:strokeColor="#5A1A2A"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="4" />
+
+    <!-- U cradle and stand: burgundy outline with a coral center stroke. -->
+    <path
+        android:fillColor="#00FFFFFF"
+        android:pathData="M29,50c0,14 11,23 25,23s25,-9 25,-23"
+        android:strokeColor="#5A1A2A"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="7" />
+    <path
+        android:fillColor="#00FFFFFF"
+        android:pathData="M29,50c0,14 11,23 25,23s25,-9 25,-23"
+        android:strokeColor="#FF7B72"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.2" />
+    <path
+        android:fillColor="#00FFFFFF"
+        android:pathData="M54,73v9M39,82h30"
+        android:strokeColor="#5A1A2A"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="7" />
+    <path
+        android:fillColor="#00FFFFFF"
+        android:pathData="M54,73v9M39,82h30"
+        android:strokeColor="#FF7B72"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.2" />
+    </group>
+</vector>
