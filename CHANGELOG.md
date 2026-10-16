@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+### 修正
+
+- 修正點擊桌面小工具行為不一致的問題（有時不開 App 直接錄音、有時開啟 App 後錄音）；
+  現在一律以 `ACTION_QUICK_RECORD` 開啟 App 並開始錄音。
+
+### 變更
+
+- 移除 `QuickRecordActivity` 透明轉接 Activity，小工具改為直接啟動 `MainActivity`。
+
 ## [1.1.0-prerelease] - 2026-10-15
 
 ### 新增

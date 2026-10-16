@@ -1,24 +1,25 @@
 package com.mini.recorder.widget
 
-import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
+import androidx.glance.ExperimentalGlanceApi
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
-import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -34,7 +35,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import com.mini.recorder.QuickRecordActivity
+import com.mini.recorder.MainActivity
 import com.mini.recorder.R
 
 private val WIDGET_BG = Color(0xFFFFDFE5)
@@ -53,10 +54,14 @@ class RecordWidget : GlanceAppWidget() {
     }
 }
 
+@OptIn(ExperimentalGlanceApi::class)
 @Composable
 private fun WidgetContent() {
     val context = LocalContext.current
-    val target = ComponentName(context, QuickRecordActivity::class.java)
+    val target = Intent(context, MainActivity::class.java).apply {
+        action = MainActivity.ACTION_QUICK_RECORD
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
     val size: DpSize? = LocalSize.current
     val compact = (size?.width ?: 170.dp) < 120.dp
 
