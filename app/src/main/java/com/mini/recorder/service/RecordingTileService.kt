@@ -1,9 +1,12 @@
 package com.mini.recorder.service
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
+import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.core.content.ContextCompat
@@ -25,7 +28,7 @@ class RecordingTileService : TileService() {
         tile.updateTile()
     }
 
-    @Suppress("DEPRECATION")
+    @SuppressLint("StartActivityAndCollapseDeprecated")
     override fun onClick() {
         super.onClick()
         val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
@@ -35,7 +38,18 @@ class RecordingTileService : TileService() {
             runCatching { ContextCompat.startForegroundService(this, intent) }
         } else {
             val open = Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivityAndCollapse(open)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val pending = PendingIntent.getActivity(
+                    this,
+                    0,
+                    open,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                startActivityAndCollapse(pending)
+            } else {
+                @Suppress("DEPRECATION")
+                startActivityAndCollapse(open)
+            }
         }
     }
 }

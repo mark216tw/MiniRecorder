@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <exclude domain="file" path="recordings/" />
+    <exclude domain="database" path="mini-recorder.db" />
+    <exclude domain="database" path="mini-recorder.db-wal" />
+    <exclude domain="database" path="mini-recorder.db-shm" />
 </full-backup-content>

@@ -1,5 +1,6 @@
 package com.mini.recorder.service
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -376,6 +377,7 @@ class RecordingService : Service() {
         )
     }
 
+    @SuppressLint("MissingPermission")
     private fun updateNotification(elapsed: Long) {
         runCatching {
             val manager = androidx.core.app.NotificationManagerCompat.from(this)

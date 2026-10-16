@@ -1,2 +1,2 @@
-# Keep generic rules; Hilt/Room handle their own.
--keep class androidx.media3.** { *; }
+# App-specific R8 rules.
+# Hilt / Room / Media3 ship their own consumer rules, so no blanket keeps are needed here.

@@ -9,12 +9,14 @@ import com.mini.recorder.data.db.RecordingWithTags
 import com.mini.recorder.playback.PlaybackController
 import com.mini.recorder.recording.RecordingStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -80,7 +82,8 @@ class RecordingListViewModel @Inject constructor(
                 RecordingSortOrder.DURATION_DESC -> filtered.sortedByDescending { it.recording.durationMs }
                 RecordingSortOrder.TITLE_ASC -> filtered.sortedBy { it.recording.title }
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        }.flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query

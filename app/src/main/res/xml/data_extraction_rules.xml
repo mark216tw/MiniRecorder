@@ -2,8 +2,14 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="recordings/" />
+        <exclude domain="database" path="mini-recorder.db" />
+        <exclude domain="database" path="mini-recorder.db-wal" />
+        <exclude domain="database" path="mini-recorder.db-shm" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="recordings/" />
+        <exclude domain="database" path="mini-recorder.db" />
+        <exclude domain="database" path="mini-recorder.db-wal" />
+        <exclude domain="database" path="mini-recorder.db-shm" />
     </device-transfer>
 </data-extraction-rules>

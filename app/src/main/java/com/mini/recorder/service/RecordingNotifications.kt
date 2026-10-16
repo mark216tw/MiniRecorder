@@ -1,5 +1,6 @@
 package com.mini.recorder.service
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -90,6 +91,7 @@ object RecordingNotifications {
             .setSilent(true)
             .build()
 
+    @SuppressLint("MissingPermission")
     fun alert(context: Context, text: String) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ALERTS)
             .setSmallIcon(R.drawable.ic_stat_record)

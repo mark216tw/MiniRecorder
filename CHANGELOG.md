@@ -9,10 +9,20 @@
 
 - 修正點擊桌面小工具行為不一致的問題（有時不開 App 直接錄音、有時開啟 App 後錄音）；
   現在一律以 `ACTION_QUICK_RECORD` 開啟 App 並開始錄音。
+- 修正所有 lint 錯誤（通知權限標註、QS Tile 棄用 API、Media3 API opt-in），
+  使 `lintDebug` 可作為 CI 關卡。
+- 修正停止錄音後返回錄音檔清單時，剛完成的錄音不會自動顯示的問題；現在清單最上方
+  項目改變時會自動捲至頂端。
 
 ### 變更
 
 - 移除 `QuickRecordActivity` 透明轉接 Activity，小工具改為直接啟動 `MainActivity`。
+- 精簡 R8 設定（移除多餘的 Media3 keep 規則）並裁剪資源語系，縮小發行 APK 體積。
+- 收斂 FileProvider 暴露範圍，僅開放 `recordings/` 目錄。
+- 備份與裝置移轉排除 Room 資料庫，避免還原後出現失效的錄音紀錄。
+- 錄音清單的搜尋／排序移出主執行緒，提升大量資料時的流暢度。
+- 播放器支援拔出耳機自動暫停（`setHandleAudioBecomingNoisy`）。
+- 迷你播放器高度略為加高（約 58dp → 64dp），提升可讀性與觸控。
 
 ## [1.1.0-prerelease] - 2026-10-15
 

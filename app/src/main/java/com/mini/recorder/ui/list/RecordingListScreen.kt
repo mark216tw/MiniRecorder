@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -58,8 +59,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +95,16 @@ fun RecordingListScreen(
     val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
     val importMessage by viewModel.importMessage.collectAsStateWithLifecycle()
     val isRecording by viewModel.isRecording.collectAsStateWithLifecycle()
+
+    val listState = rememberLazyListState()
+    var lastTopId by rememberSaveable { mutableLongStateOf(-1L) }
+    val topId = recordings.firstOrNull()?.recording?.id ?: -1L
+    LaunchedEffect(topId) {
+        if (topId != -1L && topId != lastTopId) {
+            lastTopId = topId
+            listState.animateScrollToItem(0)
+        }
+    }
 
     val context = LocalContext.current
     var sortMenuExpanded by remember { mutableStateOf(false) }
@@ -309,6 +322,7 @@ fun RecordingListScreen(
                 }
             } else {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
                         start = 12.dp,

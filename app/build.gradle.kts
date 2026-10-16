@@ -20,6 +20,7 @@ android {
         versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
+        resourceConfigurations += listOf("zh", "en")
     }
 
     buildTypes {
@@ -46,7 +47,7 @@ android {
 
     buildFeatures {
         compose = true
-        buildConfig = true
+        buildConfig = false
     }
 
     packaging {
