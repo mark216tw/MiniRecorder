@@ -46,6 +46,12 @@ class RecordingListViewModel @Inject constructor(
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), -1L)
 
+    // Only the id of the actively playing recording (avoids recomposing on position ticks).
+    val playingId: StateFlow<Long> = playback.nowPlaying
+        .map { np -> if (np?.isPlaying == true) np.recordingId else -1L }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), -1L)
+
     private val _filterTags = MutableStateFlow<Set<String>>(emptySet())
     val filterTags: StateFlow<Set<String>> = _filterTags.asStateFlow()
 
@@ -122,6 +128,17 @@ class RecordingListViewModel @Inject constructor(
     fun play(recording: Recording) {
         if (isRecording.value) return
         playback.play(recording, autoplay = true)
+    }
+
+    /** Plays/resumes the given recording, or pauses it if it is the one currently playing. */
+    fun togglePlayback(recording: Recording) {
+        if (isRecording.value) return
+        val np = playback.nowPlaying.value
+        if (np != null && np.recordingId == recording.id) {
+            playback.togglePlay()
+        } else {
+            playback.play(recording, autoplay = true)
+        }
     }
 
     fun pausePlayback() = playback.pause()

@@ -126,9 +126,11 @@ fun PlayerScreen(
 
     val shown = if (draggingPosition >= 0f) draggingPosition.toLong() else position
     val effectiveDuration = duration.coerceAtLeast(1L)
-    val activeMarkerId = markers
-        .filter { kotlin.math.abs(shown - it.timestampMs) < 1500L }
-        .minByOrNull { kotlin.math.abs(shown - it.timestampMs) }?.id
+    val activeMarkerId = remember(shown, markers) {
+        markers
+            .filter { kotlin.math.abs(shown - it.timestampMs) < 1500L }
+            .minByOrNull { kotlin.math.abs(shown - it.timestampMs) }?.id
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),

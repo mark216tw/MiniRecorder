@@ -181,7 +181,11 @@ class AudioRecorderEngine(
             record.startRecording()
             while (running) {
                 val read = record.read(shortBuf, 0, shortBuf.size)
-                if (read <= 0) continue
+                if (read < 0) {
+                    onError("錄音讀取失敗: $read")
+                    break
+                }
+                if (read == 0) continue
                 if (paused) continue
                 val frames = read / actualChannelCount
                 val amp = rms(shortBuf, read)

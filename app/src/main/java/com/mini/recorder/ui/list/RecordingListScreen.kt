@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
@@ -95,6 +96,7 @@ fun RecordingListScreen(
     val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
     val importMessage by viewModel.importMessage.collectAsStateWithLifecycle()
     val isRecording by viewModel.isRecording.collectAsStateWithLifecycle()
+    val playingId by viewModel.playingId.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
     var lastTopId by rememberSaveable { mutableLongStateOf(-1L) }
@@ -117,14 +119,15 @@ fun RecordingListScreen(
         ActivityResultContracts.RequestPermission()
     ) { }
 
-    fun playWithPermission(recording: com.mini.recorder.data.db.Recording) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+    fun playWithPermission(recording: com.mini.recorder.data.db.Recording, willPlay: Boolean) {
+        if (willPlay &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) {
             notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-        viewModel.play(recording)
+        viewModel.togglePlayback(recording)
     }
 
     LaunchedEffect(importMessage) {
@@ -335,13 +338,14 @@ fun RecordingListScreen(
                     items(recordings, key = { it.recording.id }) { item ->
                         RecordingCard(
                             item = item,
+                            isPlaying = playingId == item.recording.id,
                             selectedTags = filterTags,
                             playEnabled = !isRecording,
                             onClick = {
                                 viewModel.pausePlayback()
                                 onOpenRecording(item.recording.id, false)
                             },
-                            onPlay = { playWithPermission(item.recording) },
+                            onTogglePlay = { playWithPermission(item.recording, playingId != item.recording.id) },
                             onTagClick = { viewModel.toggleFilter(it) }
                         )
                     }
@@ -358,10 +362,11 @@ fun RecordingListScreen(
 @Composable
 private fun RecordingCard(
     item: RecordingWithTags,
+    isPlaying: Boolean,
     selectedTags: Set<String>,
     playEnabled: Boolean,
     onClick: () -> Unit,
-    onPlay: () -> Unit,
+    onTogglePlay: () -> Unit,
     onTagClick: (String) -> Unit
 ) {
     val recording = item.recording
@@ -394,15 +399,15 @@ private fun RecordingCard(
                     )
                 }
 
-                // 播放按鈕：標題列右側
+                // 播放/暫停按鈕：標題列右側
                 FilledIconButton(
-                    onClick = onPlay,
+                    onClick = onTogglePlay,
                     enabled = playEnabled,
                     modifier = Modifier.size(42.dp)
                 ) {
                     Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = "播放",
+                        if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        contentDescription = if (isPlaying) "暫停" else "播放",
                         modifier = Modifier.size(22.dp)
                     )
                 }

@@ -25,11 +25,13 @@ import com.mini.recorder.recording.RecordingMarker
 import com.mini.recorder.recording.RecordingStateHolder
 import com.mini.recorder.util.TimeUtils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -38,6 +40,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.Executors
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -59,6 +62,7 @@ class RecordingService : Service() {
     private var elapsedAccumMs = 0L
     private var firedThresholds = mutableSetOf<Int>()
     private var markerCounter = 0
+    private var starting = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -84,7 +88,7 @@ class RecordingService : Service() {
     }
 
     private fun startRecording(title: String?) {
-        if (engine != null) return
+        if (engine != null || starting) return
         if (playback.nowPlaying.value?.isPlaying == true) {
             startForegroundPlaceholder()
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
@@ -93,10 +97,25 @@ class RecordingService : Service() {
             return
         }
         startForegroundPlaceholder()
+        finalized = false
+        starting = true
         scope?.launch {
-            val loaded = settingsRepository.settings.first()
-            settings = loaded
-            beginRecording(loaded, title)
+            try {
+                val loaded = settingsRepository.settings.first()
+                settings = loaded
+                if (beginRecording(loaded, title)) {
+                    acquireWakeLock()
+                    startForegroundWithNotification()
+                    startTimer()
+                } else {
+                    stopSelf()
+                }
+            } catch (t: Throwable) {
+                stateHolder.update { it.copy(message = "無法開始錄音") }
+                stopSelf()
+            } finally {
+                starting = false
+            }
         }
     }
 
@@ -113,8 +132,7 @@ class RecordingService : Service() {
         )
     }
 
-    private suspend fun beginRecording(loaded: AppSettings, title: String?) {
-        finalized = false
+    private suspend fun beginRecording(loaded: AppSettings, title: String?): Boolean {
         val file = repository.newRecordingFile()
         val channelCount = if (loaded.channelMode == ChannelMode.STEREO) 2 else 1
         val recordTitle = title?.takeIf { it.isNotBlank() } ?: TimeUtils.defaultTitle(System.currentTimeMillis())
@@ -130,6 +148,13 @@ class RecordingService : Service() {
                 sampleRate = 44100
             )
         )
+
+        // Stop requested while the DB insert was in flight.
+        if (finalized) {
+            repository.delete(Recording(id = recordingId, title = recordTitle, filePath = file.absolutePath, createdAt = 0, durationMs = 0, sizeBytes = 0, channelCount = channelCount, sampleRate = 44100))
+            recordingId = -1L
+            return false
+        }
 
         val config = AudioConfig(
             sampleRate = 44100,
@@ -156,14 +181,20 @@ class RecordingService : Service() {
             onError = { msg -> stateHolder.update { it.copy(message = msg) } }
         )
         engine = newEngine
-        newEngine.start()
+        withContext(engineDispatcher) { newEngine.start() }
+
+        // Stop requested while the engine was starting, or the engine was superseded.
+        if (finalized || engine !== newEngine) {
+            withContext(engineDispatcher) { newEngine.stop() }
+            return false
+        }
 
         if (!newEngine.isRecording) {
             engine = null
             repository.delete(Recording(id = recordingId, title = recordTitle, filePath = file.absolutePath, createdAt = 0, durationMs = 0, sizeBytes = 0, channelCount = channelCount, sampleRate = 44100))
+            recordingId = -1L
             stateHolder.update { it.copy(message = "無法開始錄音") }
-            stopSelf()
-            return
+            return false
         }
 
         elapsedAccumMs = 0L
@@ -182,9 +213,7 @@ class RecordingService : Service() {
                 message = null
             )
         }
-        acquireWakeLock()
-        startForegroundWithNotification()
-        startTimer()
+        return true
     }
 
     private fun acquireWakeLock() {
@@ -303,17 +332,18 @@ class RecordingService : Service() {
             stopSelf()
             return
         }
-        val id = recordingId
-        val duration = engine?.currentPositionMs() ?: 0L
-        val channel = engine?.channelCount ?: 1
-        engine?.stop()
-        engine = null
         finalized = true
+        val id = recordingId
+        val e = engine
+        val duration = e?.currentPositionMs() ?: 0L
+        val channel = e?.channelCount ?: 1
+        engine = null
         releaseWakeLock()
         timerJob?.cancel()
         timerJob = null
 
         scope?.launch {
+            withContext(NonCancellable + engineDispatcher) { e?.stop() }
             withContext(NonCancellable) { persistResult(id, duration, channel) }
             ServiceCompat.stopForeground(this@RecordingService, ServiceCompat.STOP_FOREGROUND_REMOVE)
             stopSelf()
@@ -325,15 +355,16 @@ class RecordingService : Service() {
             stopSelf()
             return
         }
-        val id = recordingId
-        engine?.stop()
-        engine = null
         finalized = true
+        val id = recordingId
+        val e = engine
+        engine = null
         releaseWakeLock()
         timerJob?.cancel()
         timerJob = null
 
         scope?.launch {
+            withContext(NonCancellable + engineDispatcher) { e?.stop() }
             withContext(NonCancellable) {
                 if (id > 0) {
                     repository.getById(id)?.let { repository.delete(it) }
@@ -399,23 +430,22 @@ class RecordingService : Service() {
     override fun onDestroy() {
         if (!finalized && engine != null) {
             val id = recordingId
-            val duration = engine?.currentPositionMs() ?: 0L
-            val channel = engine?.channelCount ?: 1
-            engine?.stop()
+            val e = engine
+            val duration = e?.currentPositionMs() ?: 0L
+            val channel = e?.channelCount ?: 1
             engine = null
             finalized = true
             releaseWakeLock()
             timerJob?.cancel()
             timerJob = null
             runCatching {
-                runBlocking(Dispatchers.IO) {
+                runBlocking(engineDispatcher) {
+                    e?.stop()
                     withContext(NonCancellable) { persistResult(id, duration, channel) }
                 }
             }
         }
         timerJob?.cancel()
-        engine?.stop()
-        engine = null
         releaseWakeLock()
         scope?.cancel()
         scope = null
@@ -424,6 +454,12 @@ class RecordingService : Service() {
 
     companion object {
         private const val TICK_MS = 250L
+
+        // Serializes blocking AudioRecord/MediaCodec init and teardown off the main thread.
+        private val engineDispatcher: CoroutineDispatcher =
+            Executors.newSingleThreadExecutor { r ->
+                Thread(r, "audio-engine").apply { isDaemon = true }
+            }.asCoroutineDispatcher()
 
         const val ACTION_START = "com.mini.recorder.action.START"
         const val ACTION_TOGGLE = "com.mini.recorder.action.TOGGLE"

@@ -1,7 +1,9 @@
 package com.mini.recorder.playback
 
+import android.content.ComponentCallbacks2
 import android.content.ComponentName
 import android.content.Context
+import android.content.res.Configuration
 import android.net.Uri
 import androidx.core.content.ContextCompat
 import androidx.media3.common.C
@@ -49,6 +51,7 @@ class PlaybackController @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var controller: MediaController? = null
     private var connecting = false
+    private var connectToken = 0
     private var pendingAction: ((MediaController) -> Unit)? = null
     private var positionJob: Job? = null
 
@@ -86,6 +89,23 @@ class PlaybackController @Inject constructor(
         }
     }
 
+    init {
+        context.registerComponentCallbacks(object : ComponentCallbacks2 {
+            override fun onConfigurationChanged(newConfig: Configuration) = Unit
+
+            override fun onLowMemory() {
+                if (_nowPlaying.value == null) release()
+            }
+
+            @Suppress("DEPRECATION")
+            override fun onTrimMemory(level: Int) {
+                if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW && _nowPlaying.value == null) {
+                    release()
+                }
+            }
+        })
+    }
+
     private fun ensureController(action: (MediaController) -> Unit) {
         controller?.let {
             action(it)
@@ -94,10 +114,15 @@ class PlaybackController @Inject constructor(
         pendingAction = action
         if (connecting) return
         connecting = true
-        val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
-        val future = MediaController.Builder(context, token).buildAsync()
+        val generation = ++connectToken
+        val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+        val future = MediaController.Builder(context, sessionToken).buildAsync()
         future.addListener({
             val mc = runCatching { future.get() }.getOrNull()
+            if (generation != connectToken) {
+                runCatching { mc?.release() }
+                return@addListener
+            }
             connecting = false
             if (mc != null) {
                 controller = mc
@@ -204,6 +229,18 @@ class PlaybackController @Inject constructor(
         stopPositionUpdates()
         mc.stop()
         mc.clearMediaItems()
+        _nowPlaying.value = null
+        release()
+    }
+
+    /** Drops the connection to the playback service. Safe to call when already released. */
+    fun release() {
+        connectToken++
+        stopPositionUpdates()
+        controller?.let { runCatching { it.release() } }
+        controller = null
+        pendingAction = null
+        connecting = false
         _nowPlaying.value = null
     }
 

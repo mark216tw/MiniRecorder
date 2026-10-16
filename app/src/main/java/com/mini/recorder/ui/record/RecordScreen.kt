@@ -75,6 +75,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mini.recorder.service.RecordingService
 import com.mini.recorder.ui.components.AppTopBar
@@ -94,6 +96,11 @@ fun RecordScreen(viewModel: RecordViewModel = hiltViewModel()) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
                 PackageManager.PERMISSION_GRANTED
         )
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        hasAudioPermission =
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
     }
     var titleDraft by remember { mutableStateOf("") }
     var showTitleDialog by remember { mutableStateOf(false) }

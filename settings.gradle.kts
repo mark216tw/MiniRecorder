@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MiniRecorder"
 include(":app")
+include(":baselineprofile")

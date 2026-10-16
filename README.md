@@ -20,6 +20,8 @@ MiniRecorder 是一款以 Kotlin 與 Jetpack Compose 打造的輕量 Android 錄
 - **標籤分類**：支援標籤新增 / 重新命名 / 上色 / 刪除，並可於清單以標籤過濾。
 - **搜尋與排序**：依標題搜尋，並可依時間、長度、標題排序。
 - **播放控制**：0.5x～2.0x 倍速、前後 10 秒快轉、前後要點跳轉、分享與刪除。
+- **清單播放控制**：清單上的播放鈕會反映播放狀態，播放中可直接暫停 / 續播。
+- **啟動效能**：導入 Baseline Profile（Macrobenchmark 模組）以改善冷啟動與首次互動。
 - **快速入口**：支援快速設定磚（QS Tile）、桌面小工具（Glance 響應式尺寸）與捷徑意圖快速錄音。
 - **自訂外觀**：淺色 / 深色 / 跟隨系統，並可透過色相滑桿自訂整體主題色。
 - **最長錄音與提醒**：可設定 30～180 分鐘上限，並在前 10 / 5 / 3 分鐘發出語音與震動提醒。
@@ -47,6 +49,9 @@ MiniRecorder 是一款以 Kotlin 與 Jetpack Compose 打造的輕量 Android 錄
 
 # 建置測試發行版本（啟用 R8 壓縮、以 Debug 金鑰簽署）
 .\gradlew :app:assemblePrerelease
+
+# 產生 Baseline Profile（需連接裝置 / 模擬器；結果寫入 app/src/main/baseline-prof.txt）
+.\gradlew :app:generateBaselineProfile
 
 # 執行單元測試（若有）
 .\gradlew test
